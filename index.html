@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Icon Maker</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #canvas {
+            display: grid;
+            grid-template-columns: repeat(16, 20px); 
+            grid-template-rows: repeat(16, 20px);
+            gap: 1px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .pixel {
+            width: 20px;
+            height: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            transition: background-color 0.1s ease;
+        }
+
+        #controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #colorPicker {
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #download {
+            background-color: #28a745;
+        }
+
+        #download:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Pixel Art Icon Maker</h1>
+    
+    <!-- 16x16 pixel grid -->
+    <div id="canvas"></div>
+
+    <!-- Controls -->
+    <div id="controls">
+        <input type="color" id="colorPicker" value="#000000">
+        <button id="drawMode">Draw</button>
+        <button id="eraseMode">Erase</button>
+        <button id="download">Download</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const colorPicker = document.getElementById('colorPicker');
+        const drawModeButton = document.getElementById('drawMode');
+        const eraseModeButton = document.getElementById('eraseMode');
+        const downloadButton = document.getElementById('download');
+
+        let isDrawing = false;  
+        let drawMode = true;    
+
+        // Initialize the 16x16 grid
+        for (let i = 0; i < 16 * 16; i++) {
+            const pixel = document.createElement('div');
+            pixel.classList.add('pixel');
+            canvas.appendChild(pixel);
+
+            // Event listeners for drawing/erasing on both mouse and touch
+            pixel.addEventListener('mousedown', startDrawing);
+            pixel.addEventListener('mousemove', drawIfActive);
+            pixel.addEventListener('mouseup', stopDrawing);
+            pixel.addEventListener('touchstart', startDrawing);
+            pixel.addEventListener('touchmove', drawIfActive);
+            pixel.addEventListener('touchend', stopDrawing);
+        }
+
+        // Switch to draw mode
+        drawModeButton.addEventListener('click', () => {
+            drawMode = true;
+        });
+
+        // Switch to erase mode
+        eraseModeButton.addEventListener('click', () => {
+            drawMode = false;
+        });
+
+        // Start drawing
+        function startDrawing(e) {
+            isDrawing = true;
+            changeColor(e);
+        }
+
+        // Stop drawing
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        // Draw if the user is currently holding down the mouse or dragging their finger
+        function drawIfActive(e) {
+            if (isDrawing) {
+                changeColor(e);
+            }
+        }
+
+        // Function to change the color of a pixel
+        function changeColor(e) {
+            if (e.type === 'touchmove') {
+                e.preventDefault();  // Prevent scrolling on touch devices
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (element && element.classList.contains('pixel')) {
+                    element.style.backgroundColor = drawMode ? colorPicker.value : '#fff';  // Draw or erase
+                }
+            } else {
+                const pixel = e.target;
+                if (pixel.classList.contains('pixel')) {
+                    pixel.style.backgroundColor = drawMode ? colorPicker.value : '#fff';  // Draw or erase
+                }
+            }
+        }
+ // Download canvas as an upscaled image
+ downloadButton.addEventListener('click', () => {
+        const upscaleSize = 256;  
+        const pixelSize = upscaleSize / 16;  
+
+        const canvasData = document.createElement('canvas');
+        canvasData.width = upscaleSize;
+        canvasData.height = upscaleSize;
+        const ctx = canvasData.getContext('2d');
+
+        // Iterate over each pixel and set the canvas pixels accordingly, but scale them up
+        Array.from(canvas.children).forEach((pixel, index) => {
+            const row = Math.floor(index / 16);
+            const col = index % 16;
+            const color = window.getComputedStyle(pixel).backgroundColor;
+            ctx.fillStyle = color;
+            ctx.fillRect(col * pixelSize, row * pixelSize, pixelSize, pixelSize);  
+        });
+
+        const link = document.createElement('a');
+        link.download = 'minecraft_block.png';
+        link.href = canvasData.toDataURL();
+        link.click();
+    });
+        // Prevent scrolling while drawing
+        document.body.addEventListener('touchmove', function(e) {
+            e.preventDefault(); 
+        }, { passive: false });
+    </script>
+</body>
+</html>
